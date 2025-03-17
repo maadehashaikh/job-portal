@@ -22,26 +22,25 @@ export const applyJob = async (req, res) => {
         message: "You've already applied for this job",
         success: false,
       });
+    } else {
+      const job = await Job.findById(jobId);
+      if (!job) {
+        return res
+          .status(404)
+          .json({ message: "OOps! Job not found", success: false });
+      }
+      const newApplication = await Application.create({
+        job: jobId,
+        applicant: userId,
+      });
+      job.applications.push(newApplication._id);
+      await job.save();
+      return res.status(201).json({
+        message: "Job applied successfully",
+        success: true,
+      });
     }
-
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res
-        .status(404)
-        .json({ message: "OOps! Job not found", success: false });
-    }
-
     // create a new application
-    const newApplication = await Application.create({
-      job: jobId,
-      applicant: userId,
-    });
-    job.applications.push(newApplication._id);
-    await job.save();
-    return res.status(201).json({
-      message: "Job applied successfully",
-      success: true,
-    });
   } catch (error) {
     console.log(`Error Found at applying job ${error}`);
     return res.status(500).json({
@@ -144,7 +143,7 @@ export const updatestatus = async (req, res) => {
     await application.save();
 
     return res.status(200).json({
-      message: "Updated status successfully",
+      message: "Status updated successfully",
       success: true,
     });
   } catch (error) {
